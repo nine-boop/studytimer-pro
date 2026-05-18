@@ -125,3 +125,13 @@ LOGOUT_REDIRECT_URL = 'login'
 # Skips strict verification redirects to create immediate login records smoothly
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+# --- Bypassing SQLite for Google Login ---
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+            'key': ''
+        }
+    }
+}
