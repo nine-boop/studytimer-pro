@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="dashboard-view-panel" class="space-y-8">
+    <div class="mb-4">
+        <h1 class="text-2xl font-black text-purple-950 flex items-center gap-2">Focus Studio <span class="text-xl">🍓</span></h1>
+        <p class="text-sm text-purple-400">Manage your daily attention sessions with soft parameters.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-1 bg-white border-4 border-pink-100 rounded-[2rem] p-8 flex flex-col items-center justify-between shadow-xl shadow-pink-100/30">
+            <div class="flex bg-purple-50 rounded-xl p-1 w-full max-w-[210px] border border-purple-100 shadow-inner">
+                <button id="mode-study" class="flex-1 py-1.5 text-xs font-black rounded-lg bg-gradient-to-r from-pink-300 to-purple-300 text-white shadow transition-all">🍓 Study</button>
+                <button id="mode-break" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-purple-300 hover:text-purple-600 transition-all">☁️ Break</button>
+            </div>
+
+            <div id="timer-ring" class="w-52 h-52 my-8 rounded-full border-4 border-pink-300 bg-rose-50/30 flex flex-col items-center justify-center shadow-lg transition-all duration-300 relative">
+                <span id="time-display" class="text-5xl font-mono font-black tracking-tight text-purple-700">25:00</span>
+                <span id="timer-label" class="text-[10px] font-black tracking-widest uppercase text-pink-400 mt-1">Focus Mode</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="btn-reset" class="text-purple-300 hover:text-purple-600 p-2 border-2 border-purple-100 rounded-xl transition bg-white" title="Reset Session Engine">🔄</button>
+                <button id="btn-play-pause" class="bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white px-8 py-2.5 rounded-xl text-xs font-black shadow-md shadow-pink-200 transition">START ✨</button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-white border-4 border-purple-100 rounded-[2rem] p-6 flex flex-col justify-between shadow-md">
+                <span class="text-[10px] font-black text-purple-400 tracking-wider uppercase block">🌸 Focus Registered Today</span>
+                <div class="mt-4">
+                    <p class="text-3xl font-mono font-black text-purple-800" id="stat-focus-time">{{ focus_time }}</p>
+                    <p class="text-[10px] text-purple-300 mt-1">Total minutes completed in session blocks.</p>
+                </div>
+            </div>
+
+            <div class="bg-white border-4 border-pink-100 rounded-[2rem] p-6 flex flex-col justify-between shadow-md">
+                <span class="text-[10px] font-black text-pink-400 tracking-wider uppercase block">🍓 Pomodoros Cleared</span>
+                <div class="mt-4">
+                    <p class="text-3xl font-mono font-black text-pink-800" id="stat-pomodoros">{{ pomodoros_today }}</p>
+                    <p class="text-[10px] text-pink-300 mt-1">Daily goal tracker benchmark: 6</p>
+                </div>
+            </div>
+
+            <div class="bg-white border-4 border-emerald-100 rounded-[2rem] p-6 flex flex-col justify-between shadow-md">
+                <span class="text-[10px] font-black text-emerald-500 tracking-wider uppercase block">🐾 Current Active Streak</span>
+                <div class="mt-4">
+                    <p class="text-3xl font-mono font-black text-emerald-600">{{ current_streak }} Day{{ current_streak|pluralize }}</p>
+                    <p class="text-[10px] text-emerald-400 mt-1">Consecutive calendar logins verified.</p>
+                </div>
+            </div>
+
+            <div class="bg-white border-4 border-amber-100 rounded-[2rem] p-6 flex flex-col justify-between shadow-md">
+                <span class="text-[10px] font-black text-amber-500 tracking-wider uppercase block">⚠️ Distraction Log Incidents</span>
+                <div class="mt-4">
+                    <p class="text-3xl font-mono font-black text-amber-600" id="stat-distractions">{{ distractions_today }}</p>
+                    <p class="text-[10px] text-amber-400 mt-1">Total friction rows submitted today.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+        <div class="bg-white border-4 border-purple-100 rounded-[2rem] p-6 flex flex-col justify-between shadow-md">
+            <div>
+                <h3 class="text-sm font-black text-purple-900 flex items-center gap-1.5">⚠️ Distraction Log</h3>
+                <p class="text-xs text-purple-300 mt-0.5 mb-4">Input structural interruptions inside focus workflows.</p>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="distraction-input" placeholder="Type what distracted you... 🧸" class="flex-1 px-4 py-2 border-2 border-purple-50 rounded-xl text-xs font-medium focus:outline-none focus:border-pink-300 bg-purple-50/20 shadow-inner">
+                    <button id="btn-add-distraction" class="bg-gradient-to-r from-pink-400 to-purple-400 text-white text-xs font-black px-4 rounded-xl shadow transition">+</button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 mt-6 border-t border-purple-50 pt-4">
+                <button onclick="submitQuickTag('Phone Interruption', 'Phone')" class="px-3 py-1.5 text-[11px] font-bold border-2 border-purple-50 rounded-xl hover:bg-pink-50/40 bg-white text-purple-600 transition">📱 Phone</button>
+                <button onclick="submitQuickTag('Checked Social Media Feeds', 'Social Media')" class="px-3 py-1.5 text-[11px] font-bold border-2 border-purple-50 rounded-xl hover:bg-pink-50/40 bg-white text-purple-600 transition">🎀 Social</button>
+                <button onclick="submitQuickTag('Ambient Work Environmental Noise', 'Noise')" class="px-3 py-1.5 text-[11px] font-bold border-2 border-purple-50 rounded-xl hover:bg-pink-50/40 bg-white text-purple-600 transition">🐱 Noise</button>
+                <button onclick="submitQuickTag('Hunger Break Interrupt', 'Hunger')" class="px-3 py-1.5 text-[11px] font-bold border-2 border-purple-50 rounded-xl hover:bg-pink-50/40 bg-white text-purple-600 transition">🍓 Hunger</button>
+                <button onclick="submitQuickTag('Unspecified Interruption Event', 'Other')" class="px-3 py-1.5 text-[11px] font-bold border-2 border-purple-50 rounded-xl hover:bg-pink-50/40 bg-white text-purple-600 transition">⭐️ Other</button>
+            </div>
+        </div>
+
+        <div class="bg-white border-4 border-pink-100 rounded-[2rem] p-6 flex flex-col h-64 shadow-md">
+            <span class="text-[10px] font-black text-pink-400 tracking-wider uppercase block mb-3">Live Session Logs</span>
+            <ul id="distraction-list" class="space-y-2 overflow-y-auto pr-1 flex-1 text-xs font-bold">
+                {% for distraction in distractions %}
+                <li class="p-2 border-2 border-pink-50 rounded-xl bg-purple-50/20 flex justify-between items-center text-purple-700">
+                    <div>
+                        <p class="font-bold text-purple-900">{{ distraction.name }}</p>
+                        <p class="text-[9px] uppercase font-black text-pink-400 mt-0.5">{{ distraction.category }}</p>
+                    </div>
+                    <span class="text-[10px] text-purple-300 font-medium">{{ distraction.time_logged|time:"g:i A" }}</span>
+                </li>
+                {% empty %}
+                <p id="empty-msg" class="text-xs text-purple-300 text-center mt-12 italic">No logs inside database workspace ☁️</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="export-view-panel" class="hidden space-y-8">
+    <div class="mb-4">
+        <h1 class="text-2xl font-black text-purple-950 flex items-center gap-2">Data Extraction Port <span class="text-xl">🎀</span></h1>
+        <p class="text-sm text-purple-400">Compile active profile records into vector documents or structural data fields.</p>
+    </div>
+
+    <div class="bg-white border-4 border-pink-100 rounded-[2rem] p-6 shadow-md">
+        <h3 class="text-sm font-black text-purple-900 mb-6">Select Compilation Targets Available</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button onclick="runPdfExport()" class="p-4 border-2 border-purple-100 rounded-2xl hover:border-pink-400 bg-white text-left flex flex-col justify-between h-28 group transition">
+                <span class="text-[9px] font-black text-purple-300 uppercase">Vector Print layout</span>
+                <div>
+                    <p class="text-sm font-black text-purple-900 leading-none">Print to PDF 📄</p>
+                    <p class="text-[10px] text-purple-400 mt-1">Generates standardized vector graphics via browser print profiles.</p>
+                </div>
+            </button>
+
+            <button onclick="exportToExcel()" class="p-4 border-2 border-purple-100 rounded-2xl hover:border-pink-400 bg-white text-left flex flex-col justify-between h-28 group transition">
+                <span class="text-[9px] font-black text-purple-300 uppercase">Matrix Grid array</span>
+                <div>
+                    <p class="text-sm font-black text-purple-900 leading-none">Export Excel (CSV) 📊</p>
+                    <p class="text-[10px] text-purple-400 mt-1">Compiles logs into grid sheets ready for data software analysis.</p>
+                </div>
+            </button>
+
+            <button onclick="exportToWord()" class="p-4 border-2 border-purple-100 rounded-2xl hover:border-pink-400 bg-white text-left flex flex-col justify-between h-28 group transition">
+                <span class="text-[9px] font-black text-purple-300 uppercase">Text block string</span>
+                <div>
+                    <p class="text-sm font-black text-purple-900 leading-none">Export Word Document 📝</p>
+                    <p class="text-[10px] text-purple-400 mt-1">Transforms attention profiles into structured summary strings.</p>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <div id="hidden-export-table-container" class="hidden">
+        <table id="export-target-table">
+            <tbody>
+                {% for item in all_distractions_export %}
+                <tr><td>{{ item.name }}</td><td>{{ item.category }}</td><td>{{ item.time_logged|date:"Y-m-d H:i:s" }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="settings-view-panel" class="hidden space-y-8">
+    <div class="mb-4">
+        <h1 class="text-2xl font-black text-purple-950 flex items-center gap-2">Profile Settings <span class="text-xl">⭐️</span></h1>
+        <p class="text-sm text-purple-400">Update your account configuration fields securely.</p>
+    </div>
+
+    <div class="max-w-xl bg-white border-4 border-purple-100 rounded-[2rem] p-8 shadow-xl shadow-pink-100/30 relative">
+        <div id="settings-alert-msg" class="hidden p-3 mb-4 rounded-xl text-xs font-bold text-center border-2"></div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-black text-purple-500 uppercase tracking-wider mb-1">Username</label>
+                <input type="text" id="settings-username" value="{{ user.username }}" class="w-full px-4 py-2.5 border-2 border-purple-50 rounded-xl text-xs font-bold text-purple-700 bg-purple-50/20 focus:outline-none focus:border-pink-300 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-purple-500 uppercase tracking-wider mb-1">Email Address</label>
+                <input type="email" id="settings-email" value="{{ user.email }}" class="w-full px-4 py-2.5 border-2 border-purple-50 rounded-xl text-xs font-bold text-purple-700 bg-purple-50/20 focus:outline-none focus:border-pink-300 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-purple-500 uppercase tracking-wider mb-1">New Password (leave blank to keep current)</label>
+                <input type="password" id="settings-password" placeholder="••••••••" class="w-full px-4 py-2.5 border-2 border-purple-50 rounded-xl text-xs font-bold text-purple-700 bg-purple-50/20 focus:outline-none focus:border-pink-300 transition">
+            </div>
+
+            <button onclick="executeSettingsUpdate()" class="w-full mt-4 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white font-black py-2.5 rounded-xl text-xs shadow transition">
+                Save Account Updates ✨
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // TIMER CONFIG PIPELINE FIX
+    let STUDY_TIME = 25 * 60; 
+    let BREAK_TIME = 5 * 60;  
+    let timeLeft = STUDY_TIME;
+    let timerInterval = null;
+    let isRunning = false;
+    let currentMode = 'study'; 
+
+    const timeDisplay = document.getElementById('time-display');
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const btnReset = document.getElementById('btn-reset');
+    const timerRing = document.getElementById('timer-ring');
+    const timerLabel = document.getElementById('timer-label');
+
+    function updateDisplay() {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        document.title = `(${timeDisplay.textContent}) StudyTimer Pro`;
+    }
+
+    function toggleTimer() {
+        if (isRunning) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            btnPlayPause.textContent = "START ✨";
+        } else {
+            isRunning = true;
+            btnPlayPause.textContent = "PAUSE ☁️";
+            
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    btnPlayPause.textContent = "START ✨";
+                    
+                    fetch('/save-session/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                        body: JSON.stringify({ duration: currentMode === 'study' ? 25 : 5, type: currentMode })
+                    }).then(() => {
+                        alert(currentMode === 'study' ? "Study block logged! Sync successful." : "Break complete!");
+                        location.reload();
+                    });
+                }
+            }, 1000); 
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        btnPlayPause.textContent = "START ✨";
+        timeLeft = currentMode === 'study' ? STUDY_TIME : BREAK_TIME;
+        updateDisplay();
+    }
+
+    // FIX: REPAIRED MODES SPECIFIC BREAK CONFIGURATIONS TOGGLES
+    function setMode(mode) {
+        currentMode = mode;
+        clearInterval(timerInterval);
+        isRunning = false;
+        btnPlayPause.textContent = "START ✨";
+        
+        if (mode === 'study') {
+            timeLeft = STUDY_TIME;
+            document.getElementById('mode-study').className = "flex-1 py-1.5 text-xs font-black rounded-lg bg-gradient-to-r from-pink-300 to-purple-300 text-white shadow transition-all";
+            document.getElementById('mode-break').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-purple-300 hover:text-purple-600 transition-all";
+            timerRing.className = "w-52 h-52 my-8 rounded-full border-4 border-pink-300 bg-rose-50/30 flex flex-col items-center justify-center shadow-lg transition-all duration-300";
+            timerLabel.textContent = 'Focus Mode';
+        } else {
+            timeLeft = BREAK_TIME;
+            document.getElementById('mode-break').className = "flex-1 py-1.5 text-xs font-black rounded-lg bg-gradient-to-r from-pink-300 to-purple-300 text-white shadow transition-all";
+            document.getElementById('mode-study').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-purple-300 hover:text-purple-600 transition-all";
+            timerRing.className = "w-52 h-52 my-8 rounded-full border-4 border-purple-300 bg-purple-50/30 flex flex-col items-center justify-center shadow-lg transition-all duration-300";
+            timerLabel.textContent = 'Break Mode';
+        }
+        updateDisplay();
+    }
+
+    // CONNECT GLOBAL NAVIGATION SHORTCUT TRIGGERS
+    document.getElementById('nav-start-session-btn').addEventListener('click', function() {
+        const dashBtn = document.querySelector('[onclick*="dashboard-view-panel"]');
+        if (dashBtn) switchTab('dashboard-view-panel', dashBtn);
+        setMode('study');
+        if (!isRunning) toggleTimer();
+    });
+
+    btnPlayPause.addEventListener('click', toggleTimer);
+    btnReset.addEventListener('click', resetTimer);
+    document.getElementById('mode-study').addEventListener('click', () => setMode('study'));
+    document.getElementById('mode-break').addEventListener('click', () => setMode('break'));
+    updateDisplay();
+
+    // DISTRACTION PIPELINE METRICS SUBMIT ENGINE
+    const distractionInput = document.getElementById('distraction-input');
+    const btnAddDistraction = document.getElementById('btn-add-distraction');
+    const distractionList = document.getElementById('distraction-list');
+
+    function logDataTransaction(textString, categoryTag) {
+        if (textString !== "") {
+            fetch('/save-distraction/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ text: textString, category: categoryTag })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    const emptyMsg = document.getElementById('empty-msg');
+                    if (emptyMsg) emptyMsg.remove();
+                    const newItem = document.createElement('li');
+                    newItem.className = "p-2 border-2 border-pink-50 rounded-xl bg-purple-50/20 flex justify-between items-center text-purple-700";
+                    newItem.innerHTML = `<div><p class="font-bold text-purple-900">${textString}</p><p class="text-[9px] uppercase font-black text-pink-400 mt-0.5">${categoryTag}</p></div><span class="text-[10px] text-purple-300 font-medium">${data.time}</span>`;
+                    distractionList.insertBefore(newItem, distractionList.firstChild);
+                    distractionInput.value = "";
+                    const currentCount = parseInt(document.getElementById('stat-distractions').textContent);
+                    document.getElementById('stat-distractions').textContent = currentCount + 1;
+                }
+            });
+        }
+    }
+
+    btnAddDistraction.addEventListener('click', () => logDataTransaction(distractionInput.value.trim(), 'Logged'));
+    distractionInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnAddDistraction.click(); });
+    function submitQuickTag(prefilledText, targetedCategory) { logDataTransaction(prefilledText, targetedCategory); }
+
+    // SETTINGS DATABASE LOGIC INTEGRATION EXECUTION
+    function executeSettingsUpdate() {
+        const username = document.getElementById('settings-username').value;
+        const email = document.getElementById('settings-email').value;
+        const password = document.getElementById('settings-password').value;
+        const alertBox = document.getElementById('settings-alert-msg');
+
+        fetch('/update-settings/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ username, email, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alertBox.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-600', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-600');
+            if (data.status === 'success') {
+                alertBox.className = "p-3 mb-4 rounded-xl text-xs font-bold text-center border-2 bg-emerald-50 border-emerald-200 text-emerald-600";
+                alertBox.textContent = "Account parameters modified successfully! ✨";
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alertBox.className = "p-3 mb-4 rounded-xl text-xs font-bold text-center border-2 bg-red-50 border-red-200 text-red-600";
+                alertBox.textContent = data.message || "Error modifying parameters.";
+            }
+        });
+    }
+
+    // DATA EXTRACTION ENGINES (PDF, Excel, Word)
+    function runPdfExport() { window.print(); }
+    function exportToExcel() {
+        let csvContent = "data:text/csv;charset=utf-8,Interruption Entry,Category,Timestamp\n";
+        document.querySelectorAll("#export-target-table tr").forEach(row => {
+            csvContent += Array.from(row.querySelectorAll("td")).map(c => `"${c.textContent}"`).join(",") + "\n";
+        });
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `Data_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+    function exportToWord() {
+        let docContent = "STUDYTIMER PRO PROFILE LOGS SUMMARY\n===================================\n\n";
+        document.querySelectorAll("#export-target-table tr").forEach(row => {
+            const cols = row.querySelectorAll("td");
+            docContent += `• LOG ENTRY: ${cols[0].textContent}\n  CATEGORY: ${cols[1].textContent}\n  TIMESTAMP: ${cols[2].textContent}\n\n`;
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([docContent], { type: "application/msword" }));
+        link.download = `Data_Summary_${new Date().toISOString().slice(0,10)}.doc`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+{% endblock %}
