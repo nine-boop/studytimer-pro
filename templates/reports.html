@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    @media print {
+        body { background: white !important; }
+        .no-print { display: none !important; }
+        .print-full-width { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .shadow-xl { box-shadow: none !important; border: 2px solid #fce7f3; }
+    }
+</style>
+
+<div class="space-y-6 print-full-width">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-purple-900 flex items-center gap-2">Data Analytics <span class="text-2xl">📊</span></h1>
+            <p class="text-xs font-bold text-pink-400 tracking-wider uppercase mt-1">Study performance insights & trends ✨</p>
+        </div>
+        <button onclick="window.print()" class="no-print flex items-center gap-2 px-5 py-2.5 bg-white text-purple-600 rounded-2xl font-black hover:bg-pink-50 transition border-2 border-purple-100 shadow-sm shadow-pink-100">
+            🖨️ Print / Export
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center text-sm mb-3">⏱️</div>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-widest">Focus Hours</p>
+            <h3 class="text-3xl font-black text-purple-800 mt-1">{{ total_hours }}h</h3>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center text-sm mb-3">▶️</div>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-widest">Total Sessions</p>
+            <h3 class="text-3xl font-black text-purple-800 mt-1">{{ total_sessions }}</h3>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center text-sm mb-3">🏆</div>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-widest">Best Streak</p>
+            <h3 class="text-3xl font-black text-purple-800 mt-1">7 Days</h3>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center text-sm mb-3">✨</div>
+            <p class="text-[10px] font-black text-purple-400 uppercase tracking-widest">Avg Score</p>
+            <h3 class="text-3xl font-black text-purple-800 mt-1">81/100</h3>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-purple-50 shadow-xl shadow-purple-100/30">
+            <h3 class="text-sm font-black text-purple-900 mb-1">Weekly Focus Hours 🌸</h3>
+            <canvas id="barChart" height="200"></canvas>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-purple-50 shadow-xl shadow-purple-100/30">
+            <h3 class="text-sm font-black text-purple-900 mb-1">Daily Pomodoro Count 📈</h3>
+            <canvas id="lineChart" height="200"></canvas>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-purple-50 shadow-xl shadow-purple-100/30">
+            <h3 class="text-sm font-black text-purple-900 mb-1">Distraction Categories ⚠️</h3>
+            <div class="flex justify-center h-[200px]"><canvas id="pieChart"></canvas></div>
+        </div>
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] border-4 border-purple-50 shadow-xl shadow-purple-100/30">
+            <h3 class="text-sm font-black text-purple-900 mb-1">Monthly Cumulative Focus ☁️</h3>
+            <canvas id="areaChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="lg:col-span-2 bg-white/80 backdrop-blur-md p-8 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50 overflow-x-auto">
+            <h3 class="text-sm font-black text-purple-900 mb-6 flex items-center gap-2">Sessions Breakdown <span class="text-lg">🎀</span></h3>
+            <table class="w-full text-left text-sm">
+                <thead class="bg-purple-50/50 text-purple-500 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    <tr>
+                        <th class="px-4 py-3 rounded-l-xl">Date & Time</th>
+                        <th class="px-4 py-3">Session Type</th>
+                        <th class="px-4 py-3 text-center">Duration</th>
+                        <th class="px-4 py-3 text-center rounded-r-xl">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 divide-purple-50 font-bold text-purple-800">
+                    {% for session in recent_sessions %}
+                    <tr class="hover:bg-pink-50/30 transition">
+                        <td class="px-4 py-4 text-xs text-purple-500">{{ session.date_completed|date:"M d, h:i a" }}</td>
+                        <td class="px-4 py-4 capitalize">{{ session.session_type }}</td>
+                        <td class="px-4 py-4 text-center">{{ session.duration_minutes }} min</td>
+                        <td class="px-4 py-4 text-center"><span class="px-3 py-1 bg-green-100 text-green-600 rounded-xl text-[10px] font-black uppercase">Completed</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-purple-300 italic text-xs">No sessions logged yet! 🌸</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] border-4 border-pink-100 shadow-xl shadow-pink-100/50">
+            <h3 class="text-sm font-black text-purple-900 mb-6 flex items-center gap-2">⚠️ Top Distractions</h3>
+            <div class="space-y-5">
+                {% for dist in top_distractions %}
+                <div>
+                    <div class="flex justify-between text-xs font-black text-purple-700 mb-1">
+                        <span>{{ forloop.counter }}. {{ dist.category }}</span>
+                        <span class="text-pink-400">{{ dist.count }}x</span>
+                    </div>
+                    <div class="w-full bg-purple-50 rounded-full h-2"><div class="bg-gradient-to-r from-pink-400 to-purple-400 h-2 rounded-full" style="width: {% widthratio dist.count 10 100 %}%"></div></div>
+                </div>
+                {% empty %}
+                <p class="text-center text-purple-300 italic text-xs">No distractions logged! Perfect focus. ✨</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ data: [1.8, 2.5, 0.8, 3.2, 2.0, 1.2, 0], backgroundColor: '#f472b6', borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    new Chart(document.getElementById('lineChart'), {
+        type: 'line',
+        data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ data: [4, 6, 2, 7, 5, 3, 0], borderColor: '#a78bfa', tension: 0.4, borderWidth: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: { labels: ['Social Media', 'Noise', 'Fatigue', 'Hunger', 'Other'], datasets: [{ data: [34, 26, 19, 11, 10], backgroundColor: ['#c084fc', '#f472b6', '#fbbf24', '#60a5fa', '#9ca3af'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
+    });
+    new Chart(document.getElementById('areaChart'), {
+        type: 'line',
+        data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [{ data: [6, 9, 7, 12], borderColor: '#818cf8', backgroundColor: 'rgba(129, 140, 248, 0.2)', fill: true, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+</script>
+{% endblock %}
