@@ -12,12 +12,14 @@ from .models import Distraction, StudySession
 
 @login_required(login_url='login')
 def dashboard_view(request):
+    # --- ADMIN COMMAND CENTER ROUTING ---
     if request.user.is_staff or request.user.is_superuser:
         total_users = User.objects.filter(is_staff=False).count()
         all_students = User.objects.filter(is_staff=False)
         context = {'total_users': total_users, 'students': all_students}
         return render(request, 'admin_dashboard.html', context)
     
+    # --- STUDENT DASHBOARD LOGIC ---
     today_date_str = timezone.now().strftime("%A, %B %d, %Y")
     today = date.today()
 
@@ -107,25 +109,41 @@ def save_session(request):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
+# ==========================================
+# AUTHENTICATION & ONBOARDING ENGINES
+# ==========================================
+
 def register_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        
+        # Generate the secret code
         otp_code = str(random.randint(1000, 9999))
+        
+        # --- NEW DEMO MODE REVEAL ---
+        messages.info(request, f"🎀 DEMO MODE: Your secret verification code is {otp_code}")
+        
+        # Save temp data to carry over to the verification page
         request.session['temp_user'] = {'username': username, 'email': email, 'password': password}
         request.session['registration_otp'] = otp_code
         return redirect('verify_otp')
+        
     return render(request, 'register.html')
 
 def verify_otp_view(request):
     if request.method == 'POST':
         entered_otp = request.POST.get('otp1','') + request.POST.get('otp2','') + request.POST.get('otp3','') + request.POST.get('otp4','')
+        
         if entered_otp == request.session.get('registration_otp'):
             user_data = request.session.get('temp_user')
             user = User.objects.create_user(username=user_data['username'], email=user_data['email'], password=user_data['password'])
             user.save()
             return redirect('login')
+        else:
+            messages.error(request, "Oops! That code wasn't quite right. Try again! 🎀")
+            
     return render(request, 'verify_otp.html')
 
 def login_view(request):
@@ -136,6 +154,8 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return redirect('dashboard')
+        else:
+            messages.error(request, "Invalid username or password. 🐾")
     return render(request, 'login.html')
 
 def logout_view(request):
