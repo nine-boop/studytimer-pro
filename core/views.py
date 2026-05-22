@@ -91,11 +91,17 @@ def register_view(request):
         username, email, password = request.POST.get('username'), request.POST.get('email'), request.POST.get('password')
         otp_code = str(random.randint(1000, 9999))
         
-        # EMAIL SAFETY NET: Attempt to send, but don't crash if it fails
+        # --- BULLETPROOF EMAIL SAFETY NET ---
         try:
-            send_mail('Verify StudyTimer Pro 🌸', f'Your code: {otp_code}', 'noreply@studytimer.com', [email], fail_silently=False)
+            send_mail(
+                subject='Welcome to StudyTimer Pro! 🌸', 
+                message=f'Hi {username}!\n\nYour secret verification code is: {otp_code}\n\nHappy focusing! ✨', 
+                from_email='your-email@gmail.com', 
+                recipient_list=[email], 
+                fail_silently=True
+            )
         except Exception:
-            pass # Email failed, but registration continues
+            pass # Silent failure ensures registration proceeds smoothly
         
         request.session.update({'temp_user': {'username': username, 'email': email, 'password': password}, 'registration_otp': otp_code})
         return redirect('verify_otp')
