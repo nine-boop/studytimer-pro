@@ -1,53 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Admin Control Center</h1>
-        <p class="text-gray-500 mt-1">Platform management oversight.</p>
+<div class="space-y-8">
+    <div class="mb-4">
+        <h1 class="text-2xl font-black text-purple-950 flex items-center gap-2">Admin Command Center <span class="text-xl">👑</span></h1>
+        <p class="text-sm text-purple-400">Welcome back, Headmaster! Here is your app overview.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-gray-400 text-sm font-medium">Total Registered Users</p>
-            <p class="text-4xl font-bold text-gray-800 mt-1">{{ total_users }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white border-4 border-purple-100 rounded-[2rem] p-8 flex flex-col justify-between shadow-xl shadow-pink-100/30">
+            <span class="text-xs font-black text-purple-400 tracking-wider uppercase block">Total Registered Students 🎒</span>
+            <div class="mt-4">
+                <p class="text-5xl font-mono font-black text-purple-800">{{ total_users }}</p>
+                <p class="text-xs text-purple-300 mt-2">Active accounts inside the StudyTimer database.</p>
+            </div>
         </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-gray-400 text-sm font-medium">Total Tracked Sessions</p>
-            <p class="text-4xl font-bold text-gray-800 mt-1">42</p>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-gray-400 text-sm font-medium">Global Average Focus</p>
-            <p class="text-4xl font-bold text-gray-800 mt-1">48m/user</p>
+
+        <div class="bg-gradient-to-br from-pink-400 to-purple-500 rounded-[2rem] p-8 flex flex-col justify-between shadow-xl shadow-pink-200/50 text-white">
+            <span class="text-xs font-black text-pink-100 tracking-wider uppercase block">System Status ✨</span>
+            <div class="mt-4">
+                <p class="text-3xl font-black">All Systems Go!</p>
+                <p class="text-xs text-pink-100 mt-2">Database is secure and Google OAuth is active.</p>
+                <a href="/admin/" target="_blank" class="inline-block mt-6 px-6 py-2 bg-white text-purple-600 text-xs font-black rounded-xl shadow-sm hover:bg-pink-50 transition">
+                    Open Advanced Django Portal ⚙️
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-gray-50">
-            <h3 class="text-lg font-bold text-gray-800">Active Student Directory</h3>
+    <div class="bg-white border-4 border-pink-100 rounded-[2rem] p-8 shadow-md mt-8">
+        <h3 class="text-sm font-black text-purple-900 mb-6 flex items-center gap-2">Student Database <span class="text-lg">📚</span></h3>
+        
+        <div class="overflow-hidden rounded-xl border-2 border-purple-50">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-purple-50/50 text-purple-500 font-black text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4">Username</th>
+                        <th class="px-6 py-4">Email Address</th>
+                        <th class="px-6 py-4">Join Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 divide-purple-50 text-purple-800 font-bold">
+                    {% for student in students %}
+                    <tr class="hover:bg-pink-50/30 transition">
+                        <td class="px-6 py-4 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center text-purple-600 text-xs">{{ student.username|slice:":1"|upper }}</div>
+                            {{ student.username }}
+                        </td>
+                        <td class="px-6 py-4 text-purple-400">{{ student.email }}</td>
+                        <td class="px-6 py-4 text-xs">{{ student.date_joined|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-8 text-center text-purple-300 italic text-xs">No students have signed up yet! Share your link! 🌸</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 text-gray-400 font-bold text-xs tracking-wider">
-                    <th class="p-4 pl-6">Username</th>
-                    <th class="p-4">Email</th>
-                    <th class="p-4">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50 text-sm text-gray-700">
-                {% for student in students %}
-                <tr class="hover:bg-gray-50/50 transition">
-                    <td class="p-4 pl-6 font-semibold text-gray-900">{{ student.username }}</td>
-                    <td class="p-4">{{ student.email }}</td>
-                    <td class="p-4"><span class="bg-green-50 text-green-600 text-xs font-bold px-2.5 py-1 rounded-md">Active</span></td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" class="p-6 text-center text-gray-400">No student users registered yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
 </div>
 {% endblock %}
