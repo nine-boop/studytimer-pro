@@ -123,10 +123,18 @@ def register_view(request):
         # Generate the secret code
         otp_code = str(random.randint(1000, 9999))
         
-        # --- NEW DEMO MODE REVEAL ---
-        messages.info(request, f"🎀 DEMO MODE: Your secret verification code is {otp_code}")
+        # --- 💌 SEND REAL EMAIL ---
+        subject = 'Welcome to StudyTimer Pro! 🌸'
+        message = f'Hi {username}!\n\nYour secret verification code is: {otp_code}\n\nHappy focusing! ✨'
+        from_email = 'your-email@gmail.com' # Put your actual Gmail address here
         
-        # Save temp data to carry over to the verification page
+        try:
+            send_mail(subject, message, from_email, [email], fail_silently=False)
+            messages.success(request, "Code sent! Check your inbox 💌")
+        except Exception as e:
+            messages.error(request, "Oops! The email pigeons got lost. Try again! ☁️")
+        
+        # Save temp data to carry over
         request.session['temp_user'] = {'username': username, 'email': email, 'password': password}
         request.session['registration_otp'] = otp_code
         return redirect('verify_otp')
