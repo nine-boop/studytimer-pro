@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
-from django.core.mail import send_mail
 from django.db.models import Count
 from datetime import date, timedelta
 import json
@@ -18,13 +17,11 @@ from .models import Distraction, StudySession
 
 @login_required(login_url='login')
 def dashboard_view(request):
-    # ADMIN COMMAND CENTER
     if request.user.is_staff or request.user.is_superuser:
         total_users = User.objects.filter(is_staff=False).count()
         all_students = User.objects.filter(is_staff=False)
         return render(request, 'admin_dashboard.html', {'total_users': total_users, 'students': all_students})
     
-    # STUDENT DASHBOARD
     today = date.today()
     today_sessions = StudySession.objects.filter(user=request.user, date_completed__date=today)
     
@@ -83,7 +80,7 @@ def save_session(request):
     return JsonResponse({'status': 'error'}, status=400)
 
 # ==========================================
-# AUTHENTICATION & EMAIL ENGINE
+# AUTHENTICATION ENGINE (STABLE)
 # ==========================================
 
 def register_view(request):
@@ -91,19 +88,13 @@ def register_view(request):
         username, email, password = request.POST.get('username'), request.POST.get('email'), request.POST.get('password')
         otp_code = str(random.randint(1000, 9999))
         
-        # --- BULLETPROOF EMAIL SAFETY NET ---
-        try:
-            send_mail(
-                subject='Welcome to StudyTimer Pro! 🌸', 
-                message=f'Hi {username}!\n\nYour secret verification code is: {otp_code}\n\nHappy focusing! ✨', 
-                from_email='your-email@gmail.com', 
-                recipient_list=[email], 
-                fail_silently=True
-            )
-        except Exception:
-            pass # Silent failure ensures registration proceeds smoothly
-        
+        # --- MAIL ENGINE DISABLED FOR STABILITY ---
+        # We save the OTP to the session so the user can still verify it
         request.session.update({'temp_user': {'username': username, 'email': email, 'password': password}, 'registration_otp': otp_code})
+        
+        # DURING DEMO: Tell your team the code is in the logs or print it to console
+        print(f"DEBUG - Registration OTP: {otp_code}") 
+        
         return redirect('verify_otp')
     return render(request, 'register.html')
 
