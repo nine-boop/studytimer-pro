@@ -1,4 +1,3 @@
-from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -6,25 +5,28 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.db.models import Count
 from datetime import date, timedelta
 import json
 import random
 from .models import Distraction, StudySession
 
+# ==========================================
+# MAIN DASHBOARDS & SETTINGS
+# ==========================================
+
 @login_required(login_url='login')
 def dashboard_view(request):
-    # --- ADMIN COMMAND CENTER ROUTING ---
     if request.user.is_staff or request.user.is_superuser:
         total_users = User.objects.filter(is_staff=False).count()
         all_students = User.objects.filter(is_staff=False)
         context = {'total_users': total_users, 'students': all_students}
         return render(request, 'admin_dashboard.html', context)
     
-    # --- STUDENT DASHBOARD LOGIC ---
     today_date_str = timezone.now().strftime("%A, %B %d, %Y")
     today = date.today()
 
-    # Calculate real stats
     today_sessions = StudySession.objects.filter(user=request.user, session_type='study', date_completed__date=today)
     pomodoros_today = today_sessions.count()
     total_minutes = sum(s.duration_minutes for s in today_sessions)
@@ -33,7 +35,6 @@ def dashboard_view(request):
     today_distractions = Distraction.objects.filter(user=request.user, time_logged__date=today)
     distractions_today = today_distractions.count()
 
-    # Calculate streak
     sessions = StudySession.objects.filter(user=request.user, session_type='study').values_list('date_completed', flat=True).order_by('-date_completed')
     completed_dates = sorted(list(set([timezone.localdate(d) for d in sessions])), reverse=True)
     current_streak = 0
@@ -62,6 +63,32 @@ def dashboard_view(request):
     }
     return render(request, 'dashboard.html', context)
 
+
+@login_required(login_url='login')
+def reports_view(request):
+    # Grab the user's real session data
+    all_sessions = StudySession.objects.filter(user=request.user).order_by('-date_completed')
+    
+    # Calculate real totals
+    total_minutes = sum(session.duration_minutes for session in all_sessions)
+    total_hours = round(total_minutes / 60, 1)
+    total_session_count = all_sessions.count()
+    
+    # Grab real distractions & calculate the Top 5
+    user_distractions = Distraction.objects.filter(user=request.user)
+    top_distractions = user_distractions.values('category').annotate(count=Count('category')).order_by('-count')[:5]
+    
+    context = {
+        'total_hours': total_hours,
+        'total_sessions': total_session_count,
+        'recent_sessions': all_sessions[:10],
+        'distractions_count': user_distractions.count(),
+        'top_distractions': top_distractions
+    }
+    
+    return render(request, 'reports.html', context)
+
+
 @login_required
 def update_settings(request):
     if request.method == 'POST':
@@ -89,6 +116,10 @@ def update_settings(request):
             
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
+
+# ==========================================
+# AJAX SAVING ENGINES
+# ==========================================
 
 @login_required
 def save_distraction(request):
@@ -120,13 +151,12 @@ def register_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         
-        # Generate the secret code
         otp_code = str(random.randint(1000, 9999))
         
-        # --- 💌 SEND REAL EMAIL ---
+        # --- 💌 REAL EMAIL POST OFFICE ---
         subject = 'Welcome to StudyTimer Pro! 🌸'
         message = f'Hi {username}!\n\nYour secret verification code is: {otp_code}\n\nHappy focusing! ✨'
-        from_email = 'your-email@gmail.com' # Put your actual Gmail address here
+        from_email = 'your-email@gmail.com'
         
         try:
             send_mail(subject, message, from_email, [email], fail_silently=False)
@@ -134,7 +164,6 @@ def register_view(request):
         except Exception as e:
             messages.error(request, "Oops! The email pigeons got lost. Try again! ☁️")
         
-        # Save temp data to carry over
         request.session['temp_user'] = {'username': username, 'email': email, 'password': password}
         request.session['registration_otp'] = otp_code
         return redirect('verify_otp')
